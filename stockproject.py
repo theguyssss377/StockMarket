@@ -1,7 +1,9 @@
 import alpaca_trade_api as tradeapi
 import time
-API_KEY = "PKCTPB3AWDM2UHCV7JATMHRAJB"
-API_SECRET = "HUr2U5YzBDg2zNC2BXk7vkB2XfzZGkKPfTDsstcnzsRo"
+import os
+from datetime import datetime
+API_KEY = os.getenv("APCA_API_KEY_ID")
+API_SECRET = os.getenv("APCA_API_SECRET_KEY")
 BASE_URL = "https://paper-api.alpaca.markets"
 
 SYMBOL = "AAPL"
@@ -9,14 +11,23 @@ QTY = 1
 
 api = tradeapi.REST(API_KEY, API_SECRET, BASE_URL, api_version="v2")
 
-while True:
-    api.submit_order(
-symbol=SYMBOL,
-qty=QTY,
-side="buy",
-type="market",
-time_in_force="gtc"
-    )
+def market_is_open():
+    clock = api.get_clock()
+    return clock.is_open
 
-    print("Bought", QTY, SYMBOL)
-    time.sleep(28800)
+
+def trade():
+    if market_is_open():
+        api.submit_order(
+            symbol=SYMBOL,
+            qty=QTY,
+            side="buy",
+            type="market",
+            time_in_force="gtc"
+        )
+        print("Bought {QTY} {SYMBOL} at {datetime.now()}")
+    else:
+        print("Market closed — no trade executed")
+
+if __name__ == "__main__":
+    trade()

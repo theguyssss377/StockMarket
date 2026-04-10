@@ -1,16 +1,30 @@
-name: Greetings
+name: Auto Trade Bot
 
-on: [pull_request_target, issues]
+on:
+  schedule:
+    - cron: "0 */2 * * *"   # every 2 hours
+  workflow_dispatch:        # allow manual run
 
 jobs:
-  greeting:
+  trade:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
-      pull-requests: write
+
     steps:
-    - uses: actions/first-interaction@v1
+    - name: Checkout repo
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        issue-message: "Message that will be displayed on users' first issue"
-        pr-message: "Message that will be displayed on users' first pull request"
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        pip install alpaca-trade-api
+
+    - name: Run trading bot
+      env:
+        APCA_API_KEY_ID: ${{ secrets.APCA_API_KEY_ID }}
+        APCA_API_SECRET_KEY: ${{ secrets.APCA_API_SECRET_KEY }}
+      run: |
+        python trade.py
